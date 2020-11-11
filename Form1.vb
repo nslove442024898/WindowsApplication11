@@ -1619,6 +1619,10 @@ Friend Class Form1
     ''' <param name="e"></param>
     Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
         '
+        If IsWordInstall() = False Then
+            MsgBox("本机未安装MS Office Word软件")
+            Exit Sub
+        End If
         Me.ProgressBar1.Maximum = 100
         Me.ProgressBar1.Minimum = 0
         Me.Label21.Text = $"开始读取并导出钻孔信息!"
@@ -1636,12 +1640,13 @@ Friend Class Form1
 
         If FileInUse(wordSampleFullPath) Then
             MsgBox(wordSampleFullPath + ",被占用或者被打开了,请关闭文档后再执行此操作!!!")
+            killWordAppFileName(wordSampleFullPath)
             Exit Sub
         End If
 
         Dim wordApp As Microsoft.Office.Interop.Word.Application = Nothing
 
-        Dim FontName() As String = {"liguofu"} ' Dim FontName() As String = {"liguofu", "【嵐】芊柔体"}
+        Dim FontName() As String = {"liguofu", "【嵐】芊柔体"} ' Dim FontName() As String = {"liguofu", "【嵐】芊柔体"}
 
         If 需求的字体的是否安装(FontName) Then
             If File.Exists(wordSampleFullPath) Then
@@ -1687,25 +1692,25 @@ Friend Class Form1
                 End If
             End If
         Else
-            If （MessageBox.Show($"字体未安装，请安装相应的字体{FontName(0)}后再重启本软件！", "打开字体安装包", MessageBoxButtons.YesNo， MessageBoxIcon.Exclamation) = DialogResult.Yes) Then
-                'System.Diagnostics.Process.Start("Explorer.exe", dirApp)
-                Dim processFontInstall As Process = New Process()
-                Dim processFontInstall_1 As Process = New Process()
-                With processFontInstall
-                    .StartInfo.FileName = dirApp + "\" + FontName(0) + ".ttf"
-                    .StartInfo.CreateNoWindow = False
-                    .StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Normal
-                    .Start()
+            If （MessageBox.Show($"字体未安装，请安装相应的字体{FontName(0)},{FontName(1)}后再重启本软件！", "打开字体安装包", MessageBoxButtons.YesNo， MessageBoxIcon.Exclamation) = DialogResult.Yes) Then
+                System.Diagnostics.Process.Start("Explorer.exe", dirApp)
+                'Dim processFontInstall As Process = New Process()
+                'Dim processFontInstall_1 As Process = New Process()
+                'With processFontInstall
+                '    .StartInfo.FileName = dirApp + "\" + FontName(0) + ".ttf"
+                '    .StartInfo.CreateNoWindow = False
+                '    .StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Normal
+                '    .Start()
 
-                    'If processFontInstall.WaitForExit(2000) = True Then
-                    '    With processFontInstall_1
-                    '        .StartInfo.FileName = dirApp + "\" + FontName(1) + ".ttf"
-                    '        .StartInfo.CreateNoWindow = False
-                    '        .StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Normal
-                    '        .Start()
-                    '    End With
-                    'End If
-                End With
+                '    If processFontInstall.WaitForExit(2000) = True Then
+                '        With processFontInstall_1
+                '            .StartInfo.FileName = dirApp + "\" + FontName(1) + ".ttf"
+                '            .StartInfo.CreateNoWindow = False
+                '            .StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Normal
+                '            .Start()
+                '        End With
+                '    End If
+                'End With
 
 
                 Me.Close()
@@ -1721,6 +1726,16 @@ Friend Class Form1
         For Each pro As Process In wordProcess
             Dim str = pro.MainWindowTitle
             If str = "" Then
+                pro.Kill()
+            End If
+        Next
+    End Sub
+    Private Shared Sub killWordAppFileName(fileName As String)
+        Dim myProcess = New Process()
+        Dim wordProcess = Process.GetProcessesByName("winword")
+        For Each pro As Process In wordProcess
+            Dim str = pro.MainWindowTitle
+            If str.StartsWith(Path.GetFileName(fileName)) Or str = "" Then
                 pro.Kill()
             End If
         Next
@@ -1763,15 +1778,13 @@ Friend Class Form1
     End Sub
 
     Function FileInUse(filename As String) As Boolean
-        Dim fs As FileStream, use As Boolean = True
         Try
-            fs = New FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.None)
-            use = False
-            fs.Close()
-        Catch ex As Exception
-            fs.Close()
+            File.Open(filename, FileMode.Open).Close()
+            Return False
+        Catch e As Exception
+            'MsgBox("Writing was disallowed, as expected: " & e.ToString())
+            Return True
         End Try
-        Return use
     End Function
 End Class
 

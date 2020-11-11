@@ -32,7 +32,8 @@ Module WordHelper
             If textBox.Type = Microsoft.Office.Core.MsoShapeType.msoTextBox And textBox.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeRectangle Then
                 'msoTextBox===>17,MsoShapeType===TextBox.Type.ToString()
                 With textBox.TextFrame
-                    .TextRange.Font.Name = fontnames(0)
+                    .TextRange.Font.Name = GetRandom(fontnames)
+                    'MsgBox(.TextRange.Font.Name)
                     .MarginBottom = 0
                     .MarginLeft = 0
                     .MarginRight = 0
@@ -179,4 +180,15 @@ Module WordHelper
         curDocObj.Close(False)
 
     End Sub
+
+    Public Function GetRandom(strs As String()) As String
+        Dim r As Random = New Random()
+        Dim rnd As Integer = r.Next(strs.Length)
+        Return strs(rnd)
+    End Function
+
+    Public Function IsWordInstall() As Boolean
+        Dim tMSWord As Type = Type.GetTypeFromProgID("Word.Application")
+        Return Not IsNothing(tMSWord)
+    End Function
 End Module
